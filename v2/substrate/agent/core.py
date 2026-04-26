@@ -60,6 +60,10 @@ class SubstrateAgent:
         self.tokenizer = None
         self.model_lock = threading.Lock()
         
+        # Growth system (v2.1)
+        from .growth import GrowthSystem
+        self.growth = GrowthSystem(self.memory_root)
+        
         # Background loop state
         self._running = False
         self._thread = None
@@ -71,11 +75,14 @@ class SubstrateAgent:
             "beliefs_formed": 0,
             "connections_forged": 0,
             "anticipations_prepared": 0,
+            "validations_done": 0,
+            "patterns_found": 0,
         }
         
         print(f"[Substrate] Initialized at {self.memory_root}")
         print(f"[Substrate] Model: {self.config['model']['name']}")
         print(f"[Substrate] Device: {self.config['runtime']['device']}")
+        print(f"[Substrate] Growth System: v2.1 enabled")
     
     def _load_config(self, config_path: Path) -> Dict:
         with open(config_path) as f:

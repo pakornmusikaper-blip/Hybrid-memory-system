@@ -1,12 +1,16 @@
 """
-Substrate Agent CLI
+Substrate Agent CLI v2.1
 
 Usage:
     python -m substrate run              # Start substrate in background
     python -m substrate serve <query>   # Serve a query to conscious layer
-    python -m substrate status         # Show substrate status
+    python -m substrate status          # Show substrate status
     python -m substrate beliefs        # Show all beliefs
     python -m substrate stats          # Show statistics
+    python -m substrate validate       # Run belief validation
+    python -m substrate patterns       # Show recognized patterns
+    python -m substrate growth         # Show growth summary
+    python -m substrate contradictions # Show belief contradictions
 """
 
 import sys
@@ -20,7 +24,7 @@ from substrate.agent.core import SubstrateAgent
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Substrate Agent CLI")
+    parser = argparse.ArgumentParser(description="Substrate Agent CLI v2.1")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
     # Run command
@@ -40,10 +44,24 @@ def main():
     # Stats command
     subparsers.add_parser("stats", help="Show statistics")
     
+    # Growth command (v2.1)
+    subparsers.add_parser("growth", help="Show growth summary")
+    
+    # Validate command (v2.1)
+    validate_parser = subparsers.add_parser("validate", help="Run belief validation")
+    validate_parser.add_argument("--days", type=int, default=30, help="Validate beliefs older than N days")
+    
+    # Patterns command (v2.1)
+    patterns_parser = subparsers.add_parser("patterns", help="Show recognized patterns")
+    patterns_parser.add_argument("--min", type=int, default=3, help="Minimum occurrences")
+    
+    # Contradictions command (v2.1)
+    subparsers.add_parser("contradictions", help="Show belief contradictions")
+    
     args = parser.parse_args()
     
     # Find memory root
-    memory_root = Path(__file__).parent.parent.parent.parent / "knowledge-system"
+    memory_root = Path(__file__).parent.parent.parent / "knowledge-system"
     if not memory_root.exists():
         memory_root = Path.home() / ".openclaw" / "workspace" / "knowledge-system"
     
@@ -82,6 +100,8 @@ def main():
         print(f"Belief count: {stats['belief_count']}")
         print(f"Connections forged: {stats['connections_forged']}")
         print(f"Anticipations prepared: {stats['anticipations_prepared']}")
+        print(f"Validations done: {stats.get('validations_done', 0)}")
+        print(f"Patterns found: {stats.get('patterns_found', 0)}")
         
     elif args.command == "beliefs":
         beliefs = agent.get_beliefs(subject=args.subject)
@@ -96,6 +116,45 @@ def main():
         print("\n=== Statistics ===")
         for key, value in stats.items():
             print(f"{key}: {value}")
+    
+    # v2.1 commands
+    elif args.command == "growth":
+        summary = agent.growth.get_growth_summary()
+        print("\n=== Growth Summary ===")
+        print(f"Total beliefs: {summary['total_beliefs']}")
+        print(f"Active beliefs: {summary['active_beliefs']}")
+        print(f"Decaying beliefs: {summary['decaying_beliefs']}")
+        print(f"Contradicted beliefs: {summary['contradicted_beliefs']}")
+        print(f"Average confidence: {summary['avg_confidence']:.3f}")
+        print(f"Total growth entries: {summary['total_growth_entries']}")
+        print(f"Pattern files: {summary['patterns_identified']}")
+        
+    elif args.command == "validate":
+        print(f"\n=== Validating beliefs older than {args.days} days ===")
+        validated = agent.growth.validate_all_stale(days=args.days)
+        print(f"Validated {len(validated)} beliefs")
+        agent.stats["validations_done"] = agent.stats.get("validations_done", 0) + len(validated)
+        
+    elif args.command == "patterns":
+        print(f"\n=== Recognizing patterns (min {args.min} occurrences) ===")
+        patterns = agent.growth.recognize_patterns(min_occurrences=args.min)
+        print(f"Found {len(patterns)} patterns:")
+        for p in patterns:
+            print(f"\n[{p['id']}] {p['type']}: {p['subject']}")
+            print(f"   Beliefs: {p['belief_count']} | Avg confidence: {p['avg_confidence']:.2f}")
+        agent.stats["patterns_found"] = agent.stats.get("patterns_found", 0) + len(patterns)
+        
+    elif args.command == "contradictions":
+        print("\n=== Detecting belief contradictions ===")
+        contradictions = agent.growth.detect_contradictions()
+        if contradictions:
+            print(f"Found {len(contradictions)} contradictions:")
+            for c in contradictions:
+                print(f"\n[{c['belief1']}] <> [{c['belief2']}]")
+                print(f"   1: {c['statement1']}...")
+                print(f"   2: {c['statement2']}...")
+        else:
+            print("No contradictions found!")
         
     else:
         parser.print_help()

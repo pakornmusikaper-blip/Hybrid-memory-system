@@ -7,6 +7,7 @@ A conscious-subconscious architecture for AI memory:
 """
 
 from .core import SubstrateAgent
+from .growth import GrowthSystem
 
-__version__ = "2.0.0"
-__all__ = ["SubstrateAgent"]
+__version__ = "2.1.0"
+__all__ = ["SubstrateAgent", "GrowthSystem"]

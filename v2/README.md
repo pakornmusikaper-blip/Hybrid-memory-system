@@ -1,5 +1,7 @@
 # Hybrid Memory System v2 — The Substrate Agent
 
+> *v2.1 now with Growth System: automatic belief validation, pattern recognition, contradiction detection*
+
 > *"A memory system that doesn't just store — it thinks, learns, and grows."*
 
 ## What's New in v2
@@ -50,6 +52,16 @@ The Substrate Agent is the AI equivalent of the subconscious. It runs all the ti
 | **Belief Formation** | Develops understanding that persists over time |
 | **Pattern Recognition** | Identifies recurring themes and behaviors |
 | **Reality Validation** | Validates beliefs against known facts |
+
+### v2.1 Growth System
+
+| Feature | Description |
+|---------|-------------|
+| **Automatic Validation** | Validates beliefs against facts automatically |
+| **Confidence Decay** | Old beliefs decay over time unless validated |
+| **Contradiction Detection** | Finds beliefs that contradict each other |
+| **Pattern Recognition** | Identifies recurring subject patterns |
+| **Growth Tracking** | Tracks learning progress over time |
 
 ### Own Memory
 
@@ -192,7 +204,12 @@ v2/
 
 ## Development Status
 
-v2 is in active development. The core architecture is complete and tested.
+v2.1 is in active development. The core architecture and growth system are complete and tested.
+
+### Version History
+
+- **v2.0** — Core Substrate Agent with Qwen model support
+- **v2.1** — Growth System: belief validation, pattern recognition, contradiction detection
 
 ### Known Limitations
 
@@ -202,10 +219,13 @@ v2 is in active development. The core architecture is complete and tested.
 
 ### Roadmap
 
-- [x] Core architecture
-- [x] Model loading (Qwen 0.5B, 1.5B)
-- [x] Belief formation
-- [x] Anticipation caching
+- [x] v2.0 Core architecture
+- [x] v2.0 Model loading (Qwen 0.5B, 1.5B)
+- [x] v2.0 Belief formation
+- [x] v2.0 Anticipation caching
+- [x] v2.1 Growth System
+- [x] v2.1 Belief validation
+- [x] v2.1 Pattern recognition
 - [ ] GPU acceleration
 - [ ] Model fine-tuning integration
 - [ ] Consciousness bridge protocol
