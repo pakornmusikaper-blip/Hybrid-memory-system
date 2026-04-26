@@ -1,0 +1,18 @@
+id: example-communication-style
+title: Example Communication Style Preference
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example preference record for communication style.
+tags:
+  - preference
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+subject: user
+preference_type: communication
+value: >
+  Prefer concise but clear technical communication.
+strength: strong
+notes: []

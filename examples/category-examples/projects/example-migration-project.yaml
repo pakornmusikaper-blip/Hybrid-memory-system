@@ -1,0 +1,21 @@
+id: example-migration-project
+title: Example Memory Migration Project
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example project record for a phased migration to a hybrid memory architecture.
+tags:
+  - project
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+goal: >
+  Migrate from basic transcript memory to a structured hybrid memory stack.
+state: active
+owners:
+  - example-user
+key_paths: []
+dependencies: []
+next_focus: >
+  Define schema and seed a small number of records.

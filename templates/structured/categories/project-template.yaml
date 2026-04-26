@@ -1,0 +1,20 @@
+id: project-id
+title: Project Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short project summary.
+tags:
+  - project
+sources:
+  - path/to/source
+related: []
+goal: >
+  Primary goal.
+state: active
+owners: []
+key_paths: []
+dependencies: []
+next_focus: >
+  The most important next area.

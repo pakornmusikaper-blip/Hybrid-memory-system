@@ -1,0 +1,18 @@
+id: person-id
+title: Person Name
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short durable identity summary.
+tags:
+  - person
+sources:
+  - path/to/source
+related: []
+aliases: []
+roles: []
+labels: []
+preferences: []
+contact_points: []
+notes: []

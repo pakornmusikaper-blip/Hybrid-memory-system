@@ -1,0 +1,17 @@
+id: system-id
+title: System Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short system summary.
+tags:
+  - system
+sources:
+  - path/to/source
+related: []
+system_type: software
+key_paths: []
+components: []
+known_issues: []
+notes: []

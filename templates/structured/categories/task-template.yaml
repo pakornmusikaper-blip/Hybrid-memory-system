@@ -1,0 +1,18 @@
+id: task-id
+title: Task Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short task summary.
+tags:
+  - task
+sources:
+  - path/to/source
+related: []
+priority: medium
+state: pending
+assignee: best
+next_action: >
+  Immediate next action.
+blockers: []

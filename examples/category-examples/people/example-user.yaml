@@ -1,0 +1,21 @@
+id: example-user
+title: Example User
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example durable identity record for a user.
+tags:
+  - person
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+aliases:
+  - Sample User
+roles:
+  - user
+labels:
+  - primary-contact
+preferences: []
+contact_points: []
+notes: []

@@ -1,0 +1,19 @@
+id: example-april-rollout
+title: Example April Rollout Timeline
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example timeline record for an incremental architecture rollout.
+tags:
+  - timeline
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+period: 2026-04
+events:
+  - designed architecture
+  - created schemas
+  - seeded examples
+conclusion: >
+  A staged rollout keeps complexity under control while proving real utility.

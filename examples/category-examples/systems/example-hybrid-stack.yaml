@@ -1,0 +1,21 @@
+id: example-hybrid-stack
+title: Example Hybrid Memory Stack
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example system record for a four-layer memory architecture.
+tags:
+  - system
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+system_type: software
+key_paths: []
+components:
+  - sources
+  - structured
+  - wiki
+  - search
+known_issues: []
+notes: []

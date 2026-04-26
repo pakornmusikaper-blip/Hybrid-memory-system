@@ -1,0 +1,23 @@
+id: example-memory-system
+title: Example Hybrid Memory System
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example system record for a hybrid memory architecture.
+scope:
+  - memory
+  - agent
+tags:
+  - system
+sources:
+  - ../../sources/docs/2026-04-26-system-decision-note.md
+related: []
+notes: []
+system_type: software
+key_paths: []
+components:
+  - sources
+  - structured
+  - wiki
+  - search

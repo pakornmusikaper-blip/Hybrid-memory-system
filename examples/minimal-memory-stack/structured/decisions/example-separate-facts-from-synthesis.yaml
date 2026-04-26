@@ -1,0 +1,19 @@
+id: example-separate-facts-from-synthesis
+title: Separate Facts from Synthesis
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Facts should live in structured records while synthesis should live in wiki pages.
+decision: >
+  Use structured records for stable facts and wiki pages for reusable reasoning.
+rationale: >
+  This reduces ambiguity and repeated re-derivation.
+impact:
+  - retrieval
+  - maintainability
+tags:
+  - decision
+sources:
+  - ../../sources/docs/2026-04-26-system-decision-note.md
+related: []

@@ -1,0 +1,12 @@
+id: example-user
+title: Example User
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example user record for the minimal memory stack.
+tags:
+  - person
+sources:
+  - ../../sources/docs/2026-04-26-system-decision-note.md
+related: []

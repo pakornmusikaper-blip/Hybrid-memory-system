@@ -1,0 +1,19 @@
+id: example-memory-upgrade
+title: Example Memory Upgrade Project
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example project record showing how a memory system upgrade can be represented.
+tags:
+  - project
+sources:
+  - ../../sources/docs/2026-04-26-system-decision-note.md
+related: []
+goal: >
+  Improve long-term agent continuity.
+state: active
+owners:
+  - example-user
+key_paths: []
+dependencies: []

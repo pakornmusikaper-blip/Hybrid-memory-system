@@ -1,0 +1,22 @@
+id: example-canonical-layering
+title: Example Canonical Layering Decision
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example decision defining sources, structured memory, wiki pages, and search as separate layers.
+tags:
+  - decision
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+decision: >
+  Separate facts, synthesis, raw evidence, and retrieval support into distinct layers.
+rationale: >
+  This improves retrieval quality and keeps the system maintainable.
+impact:
+  - architecture
+  - retrieval
+supersedes: []
+tradeoffs:
+  - Adds some structure overhead in exchange for clarity.

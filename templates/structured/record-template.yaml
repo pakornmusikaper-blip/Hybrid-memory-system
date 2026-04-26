@@ -1,0 +1,12 @@
+id: record-id
+title: Human Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  One paragraph summary.
+tags:
+  - tag-a
+sources:
+  - path/to/source
+related: []

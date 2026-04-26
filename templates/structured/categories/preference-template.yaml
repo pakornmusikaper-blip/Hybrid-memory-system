@@ -1,0 +1,18 @@
+id: preference-id
+title: Preference Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short preference summary.
+tags:
+  - preference
+sources:
+  - path/to/source
+related: []
+subject: user
+preference_type: communication
+value: >
+  The preference itself.
+strength: strong
+notes: []

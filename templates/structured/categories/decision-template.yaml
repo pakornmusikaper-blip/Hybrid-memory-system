@@ -1,0 +1,19 @@
+id: decision-id
+title: Decision Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short decision summary.
+tags:
+  - decision
+sources:
+  - path/to/source
+related: []
+decision: >
+  What was decided.
+rationale: >
+  Why it was decided.
+impact: []
+supersedes: []
+tradeoffs: []

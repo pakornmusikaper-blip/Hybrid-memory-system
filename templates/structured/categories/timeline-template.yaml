@@ -1,0 +1,16 @@
+id: timeline-id
+title: Timeline Title
+status: active
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+summary: >
+  Short timeline summary.
+tags:
+  - timeline
+sources:
+  - path/to/source
+related: []
+period: YYYY-MM
+events: []
+conclusion: >
+  Optional summary of what the sequence means.

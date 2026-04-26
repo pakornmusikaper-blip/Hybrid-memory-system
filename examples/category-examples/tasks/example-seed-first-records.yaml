@@ -1,0 +1,18 @@
+id: example-seed-first-records
+title: Example Seed First Records Task
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+summary: >
+  Example durable task for seeding the first records in a new memory system.
+tags:
+  - task
+sources:
+  - ../../minimal-memory-stack/sources/docs/2026-04-26-system-decision-note.md
+related: []
+priority: high
+state: pending
+assignee: best
+next_action: >
+  Create the first person, decision, and system records.
+blockers: []
