@@ -1,5 +1,7 @@
 # Hybrid Memory System v2 — The Substrate Agent
 
+> **v2.4 Release** — Now with pip installation, examples, and complete documentation!
+
 > *v2.3 with GPU Acceleration — auto-detect GPU, optimize model placement*
 
 > *v2.2 with Consciousness Bridge — bidirectional communication between conscious and subconscious*
@@ -128,6 +130,22 @@ pyyaml >= 6.0
 
 ## Installation
 
+### Option 1: pip install (recommended)
+
+```bash
+# Install from local clone
+cd Hybrid-memory-system/v2
+pip install .
+
+# Or with GPU support
+pip install .[gpu]
+
+# Or with development tools
+pip install .[dev]
+```
+
+### Option 2: Manual installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/pakornmusikaper-blip/Hybrid-memory-system.git
@@ -138,6 +156,19 @@ pip install torch transformers accelerate bitsandbytes pyyaml
 
 # Download a model (example: Qwen 0.5B)
 huggingface-cli download Qwen/Qwen2-0.5B
+```
+
+## Running Examples
+
+```bash
+# Example 1: Basic usage
+python examples/example_01_basic.py
+
+# Example 2: Growth system
+python examples/example_02_growth.py
+
+# Example 3: Consciousness bridge
+python examples/example_03_bridge.py
 ```
 
 ## Quick Start
@@ -233,10 +264,11 @@ v2.1 is in active development. The core architecture and growth system are compl
 
 ### Version History
 
-- **v2.0** — Core Substrate Agent with Qwen model support
-- **v2.1** — Growth System: belief validation, pattern recognition, contradiction detection
-- **v2.2** — Consciousness Bridge: bidirectional communication, intuition surfacing
+- **v2.4** — Final Release: pip installation, examples, documentation
 - **v2.3** — GPU Acceleration: auto-detection, memory optimization, NF4 quantization
+- **v2.2** — Consciousness Bridge: bidirectional communication, intuition surfacing
+- **v2.1** — Growth System: belief validation, pattern recognition, contradiction detection
+- **v2.0** — Core Substrate Agent with Qwen model support
 
 ### Known Limitations
 
@@ -256,8 +288,9 @@ v2.1 is in active development. The core architecture and growth system are compl
 - [x] v2.2 Consciousness Bridge
 - [x] v2.2 Intuition surfacing
 - [x] v2.3 GPU Acceleration
-- [ ] Model fine-tuning integration
-- [ ] Web UI for monitoring
+- [x] v2.4 Final Release (pip, examples, docs)
+- [ ] Model fine-tuning integration (future)
+- [ ] Web UI for monitoring (future)
 
 ## Contributing
 
