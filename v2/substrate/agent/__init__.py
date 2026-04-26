@@ -9,6 +9,15 @@ A conscious-subconscious architecture for AI memory:
 from .core import SubstrateAgent
 from .growth import GrowthSystem
 from .bridge import ConsciousnessBridge, IntuitionGenerator
+from .gpu import GPUManager, QuantizationConfig, auto_configure_for_hardware
 
-__version__ = "2.2.0"
-__all__ = ["SubstrateAgent", "GrowthSystem", "ConsciousnessBridge", "IntuitionGenerator"]
+__version__ = "2.3.0"
+__all__ = [
+    "SubstrateAgent",
+    "GrowthSystem",
+    "ConsciousnessBridge",
+    "IntuitionGenerator",
+    "GPUManager",
+    "QuantizationConfig",
+    "auto_configure_for_hardware",
+]

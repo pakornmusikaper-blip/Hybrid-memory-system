@@ -1,5 +1,5 @@
 """
-Substrate Agent CLI v2.2
+Substrate Agent CLI v2.3
 
 Usage:
     python -m substrate run              # Start substrate in background
@@ -13,6 +13,7 @@ Usage:
     python -m substrate contradictions # Show belief contradictions
     python -m substrate intuitions    # Show pending intuitions (v2.2)
     python -m substrate bridge         # Show bridge statistics (v2.2)
+    python -m substrate gpu            # Show GPU info (v2.3)
 """
 
 import sys
@@ -177,6 +178,25 @@ def main():
         print(f"Total intuitions: {stats['total_intuitions']}")
         print(f"Pending intuitions: {stats['pending_intuitions']}")
         print(f"Pending queries: {stats['pending_queries']}")
+        
+    elif args.command == "gpu":
+        print("\n=== GPU Information ===")
+        from substrate.agent.gpu import GPUManager
+        gpu_manager = GPUManager(agent.config)
+        gpu_info = gpu_manager.get_gpu_info()
+        print(f"CUDA Available: {gpu_info['cuda_available']}")
+        print(f"Device Count: {gpu_info['device_count']}")
+        if gpu_info['devices']:
+            for device in gpu_info['devices']:
+                print(f"\nDevice {device['id']}: {device['name']}")
+                print(f"  Memory: {device['total_memory_gb']:.1f}GB")
+                print(f"  Compute: {device['compute_capability']}")
+        
+        # Estimate model memory
+        model_name = agent.config['model']['name']
+        quant = agent.config['model'].get('quantization', 'none')
+        est = gpu_manager.estimate_model_memory(model_name, quant)
+        print(f"\nEstimated memory for {model_name} ({quant}): {est:.1f}GB")
         
     else:
         parser.print_help()

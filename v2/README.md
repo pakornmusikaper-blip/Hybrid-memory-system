@@ -1,6 +1,8 @@
 # Hybrid Memory System v2 — The Substrate Agent
 
-> *v2.2 now with Consciousness Bridge — bidirectional communication between conscious and subconscious*
+> *v2.3 with GPU Acceleration — auto-detect GPU, optimize model placement*
+
+> *v2.2 with Consciousness Bridge — bidirectional communication between conscious and subconscious*
 
 > *v2.1 with Growth System: automatic belief validation, pattern recognition, contradiction detection*
 
@@ -74,6 +76,17 @@ The Substrate Agent is the AI equivalent of the subconscious. It runs all the ti
 | **Belief Synchronization** | Beliefs flow between layers with tracking |
 | **Correction Protocol** | Conscious can correct substrate beliefs |
 | **Priority Messaging** | High-priority intuitions surface immediately |
+
+### v2.3 GPU Acceleration
+
+| Feature | Description |
+|---------|-------------|
+| **Auto GPU Detection** | Automatically detects CUDA GPUs |
+| **Memory Estimation** | Estimates model memory requirements |
+| **Optimal Placement** | Smart model placement on available devices |
+| **Auto Configuration** | Auto-configures quantization based on hardware |
+| **4-bit NF4 Quantization** | Improved 4-bit with NF4 format |
+| **Multi-GPU Support** | Plans for multi-GPU setups |
 
 ### Own Memory
 
@@ -223,6 +236,7 @@ v2.1 is in active development. The core architecture and growth system are compl
 - **v2.0** — Core Substrate Agent with Qwen model support
 - **v2.1** — Growth System: belief validation, pattern recognition, contradiction detection
 - **v2.2** — Consciousness Bridge: bidirectional communication, intuition surfacing
+- **v2.3** — GPU Acceleration: auto-detection, memory optimization, NF4 quantization
 
 ### Known Limitations
 
@@ -241,7 +255,7 @@ v2.1 is in active development. The core architecture and growth system are compl
 - [x] v2.1 Pattern recognition
 - [x] v2.2 Consciousness Bridge
 - [x] v2.2 Intuition surfacing
-- [ ] GPU acceleration
+- [x] v2.3 GPU Acceleration
 - [ ] Model fine-tuning integration
 - [ ] Web UI for monitoring
 

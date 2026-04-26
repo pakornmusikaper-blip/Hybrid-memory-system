@@ -95,6 +95,32 @@ class SubstrateAgent:
             return yaml.safe_load(f)
     
     # ─────────────────────────────────────────────────────────────
+    # GPU MANAGEMENT (v2.3)
+    # ─────────────────────────────────────────────────────────────
+    
+    def _setup_gpu(self):
+        """Setup GPU configuration."""
+        try:
+            from .gpu import GPUManager, auto_configure_for_hardware
+            
+            gpu_manager = GPUManager(self.config)
+            gpu_info = gpu_manager.get_gpu_info()
+            
+            if gpu_info["cuda_available"]:
+                print(f"[Substrate] GPU detected: {gpu_info['devices'][0]['name']}")
+                print(f"[Substrate] GPU memory: {gpu_info['devices'][0]['total_memory_gb']:.1f}GB")
+            else:
+                print("[Substrate] No GPU detected, using CPU")
+            
+            # Auto-configure for hardware
+            auto_configure_for_hardware(self.config)
+            
+            return gpu_manager
+        except Exception as e:
+            print(f"[Substrate] GPU setup error: {e}, continuing with CPU")
+            return None
+    
+    # ─────────────────────────────────────────────────────────────
     # MODEL MANAGEMENT
     # ─────────────────────────────────────────────────────────────
     
@@ -110,6 +136,9 @@ class SubstrateAgent:
             model_name = self.config["model"]["name"]
             print(f"[Substrate] Loading model: {model_name}...")
             
+            # Setup GPU (v2.3)
+            gpu_manager = self._setup_gpu()
+            
             from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
             import torch
             
@@ -124,22 +153,34 @@ class SubstrateAgent:
                 "device_map": device,
             }
             
-            # Quantization if specified
+            # Quantization if specified (v2.3 improvements)
             quant = self.config["model"].get("quantization", "none")
             if quant == "4-bit":
                 kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_4bit=True,
-                    bnb_4bit_compute_dtype=torch.float16
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
                 )
             elif quant == "8-bit":
                 kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_8bit=True
                 )
             
+            # Set dtype for non-quantized models
+            if quant == "none" and device == "cuda":
+                kwargs["torch_dtype"] = torch.float16
+            elif quant == "none":
+                kwargs["torch_dtype"] = torch.float32
+            
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 **kwargs
             )
+            
+            print(f"[Substrate] Model loaded successfully")
+            print(f"[Substrate] Device: {device} | Quantization: {quant}")
+            return self.model
             
             print(f"[Substrate] Model loaded successfully")
             return self.model
