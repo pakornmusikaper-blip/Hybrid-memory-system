@@ -49,6 +49,48 @@ Each layer has a clear purpose and its own promotion discipline.
 
 The system protects itself from becoming a noisy archive by enforcing clear boundaries between layers and a review discipline that catches degradation early.
 
+## Why this is different from transcript-only or retrieval-only memory
+
+Most AI agents today rely on one of two memory approaches:
+
+### Transcript-only memory
+Stores every conversation, every document, every note in one place.
+
+**Problems as it scales:**
+- Facts, synthesis, evidence, and noise all live together
+- Retrieval returns whatever semantically matches, not what is canonically correct
+- No distinction between raw evidence and synthesized knowledge
+- Memory grows noisy and trust degrades
+- Agents repeat the same mistakes because old context and new context look the same
+
+### Retrieval-only memory (RAG)
+Uses vector search to find relevant documents from a large corpus.
+
+**Problems as it scales:**
+- Retrieval quality depends on embedding and chunking quality
+- No canonical source of truth for facts
+- Facts and synthesis are mixed in retrieved documents
+- No lifecycle management — old documents stay forever even when wrong
+- Search alone cannot fix a system that stores the wrong things
+
+### Hybrid Memory System approach
+
+Separates four distinct layers with clear boundaries and promotion discipline:
+
+| Approach | Evidence | Facts | Synthesis | Retrieval |
+|---|---|---|---|---|
+| Transcript-only | mixed | mixed | mixed | hard to find |
+| RAG-only | mixed | mixed | mixed | only search |
+| **Hybrid Memory System** | `sources/` | `structured/` | `wiki/` | `search/` |
+
+The key difference: **facts are canonical, synthesis is reusable, evidence is preserved, and retrieval supports — not replaces — a real knowledge model.**
+
+Over time, this means:
+- Agents answer fact questions more reliably
+- Knowledge compounds correctly instead of accumulating noise
+- Review and maintenance stay manageable because degradation is caught early
+- External systems like Apollo WorkOS stay canonical while global knowledge stays shared
+
 ## Architecture diagram
 
 ![Architecture Overview](ARCHITECTURE-DIAGRAM.svg)
