@@ -1,69 +1,82 @@
 # Hybrid Memory System
 
-Status: Internal incubation, release-ready draft
-Date: 2026-04-26
+A documentation-first hybrid memory architecture for long-running AI agents.
 
-Hybrid Memory System is a reusable file-based memory architecture for long-running AI agents.
+Most agent memory systems either keep too much chat history or depend too heavily on retrieval alone. Hybrid Memory System gives long-running agents a more durable knowledge model by separating evidence, facts, synthesis, and search into distinct layers.
 
-It is designed to help agents move beyond transcript-only memory by separating:
-- raw evidence
-- structured facts and state
-- synthesized knowledge
-- retrieval support
+The result is a memory system that is easier to maintain, easier to review, and more reliable to use across repeated real work.
 
-This package is intentionally documentation-first.
-It is designed to be useful before any heavy automation exists.
+![Architecture Overview](ARCHITECTURE-DIAGRAM.svg)
+
+## Architecture at a glance
+
+```
+sources/       →  Raw evidence (immutable)
+structured/    →  Canonical facts & state
+wiki/          →  Synthesis & reusable knowledge
+search/        →  Retrieval support (rebuildable)
+```
+
+Each layer has a clear purpose and its own promotion discipline.
 
 ## Who this is for
 
-Use this package if you want an agent that:
-- keeps stable facts separately from explanations
-- compounds knowledge over time
-- answers repeated questions more consistently
-- preserves evidence without treating every transcript as canonical memory
-
-It is a strong fit for:
-- personal assistants
-- research agents
-- operational agents
-- long-running project assistants
+- Personal AI assistants that need to remember facts reliably
+- Research agents that compound knowledge over time
+- Operational agents that handle recurring real-world work
+- Long-running project assistants that need lower noise memory
 
 ## What is inside
 
-- vision and architecture docs
-- schema packs
-- category-specific templates
-- lint and quality guidance
-- onboarding and quick-start guides
-- public-safe example corpora
-- repository-release guidance
+- **Architecture docs** — layer design and reasoning
+- **Schema packs** — structured records, wiki pages, promotion rules
+- **Category schemas** — people, preferences, projects, decisions, systems, tasks, timelines
+- **Templates** — copy-ready record and page templates for every category
+- **Lint & quality standards** — rules to keep the system clean as it grows
+- **Onboarding guides** — quick start, 30-minute guide, common mistakes
+- **Public-safe examples** — minimal memory stack, category examples, lint findings
 
 ## Best starting path
 
-If you are new to the package, read in this order:
-1. `PACKAGE-INDEX.md`
-2. `PACKAGE-VISION.md`
-3. `QUICKSTART.md`
-4. `FIRST-30-MINUTES.md`
+1. Read this README
+2. Read `PACKAGE-INDEX.md` for the full map
+3. Read `QUICKSTART.md` to get started in minutes
+4. Read `FIRST-30-MINUTES.md` for the full onboarding experience
 
-If you are evaluating it for publication, continue with:
-5. `FINAL-RELEASE-MANIFEST.md`
-6. `repo/FIRST-GITHUB-RELEASE-SET.md`
-7. `repo/PUBLISHING-SEQUENCE.md`
+## Core design principle
 
-## Core idea
+> Promote carefully. Not everything should become canonical memory. Only keep what will remain useful and trustworthy over time.
 
-Use four layers:
-1. `sources/` for raw evidence
-2. `structured/` for canonical facts and state
-3. `wiki/` for synthesis and reusable explanations
-4. `search/` for retrieval support artifacts
+The system protects itself from becoming a noisy archive by enforcing clear boundaries between layers and a review discipline that catches degradation early.
 
-## Release posture
+## Architecture diagram
 
-This package is already strong enough for a careful documentation-first public release.
+![Architecture Overview](ARCHITECTURE-DIAGRAM.svg)
 
-## Important constraint
+The diagram shows:
+- **Four memory layers** from evidence to retrieval
+- **Promotion discipline** connecting maintenance to canonical layers
+- **External systems** (Apollo/Hermes, OpenClaw) feeding source evidence selectively
+- **Boundary** between the public package and live knowledge-system adoption
 
-Do not assume every local experiment belongs in the public package.
-Only keep what generalizes well.
+## Quick reference
+
+| Layer | Format | Purpose |
+|---|---|---|
+| `sources/` | Any raw file | Immutable evidence |
+| `structured/` | YAML | Canonical facts, state, decisions |
+| `wiki/` | Markdown + frontmatter | Reusable synthesis |
+| `search/` | Manifests, catalogs | Retrieval support |
+
+## Related resources
+
+- `ARCHITECTURE.md` — detailed layer design
+- `SCHEMA-PACK-V1.md` — structured record and wiki schema guidance
+- `CATEGORY-SCHEMA-PACK-V1.1.md` — category-specific schema extensions
+- `LINT-PACK-V1.md` — quality rules and maintenance workflow
+- `QUICKSTART.md` — fastest path to a working system
+- `repo/PUBLISHING-SEQUENCE.md` — how this package was released
+
+## License
+
+MIT — see `LICENSE`
