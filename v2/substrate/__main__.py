@@ -1,5 +1,5 @@
 """
-Substrate Agent CLI v2.1
+Substrate Agent CLI v2.2
 
 Usage:
     python -m substrate run              # Start substrate in background
@@ -11,6 +11,8 @@ Usage:
     python -m substrate patterns       # Show recognized patterns
     python -m substrate growth         # Show growth summary
     python -m substrate contradictions # Show belief contradictions
+    python -m substrate intuitions    # Show pending intuitions (v2.2)
+    python -m substrate bridge         # Show bridge statistics (v2.2)
 """
 
 import sys
@@ -155,6 +157,26 @@ def main():
                 print(f"   2: {c['statement2']}...")
         else:
             print("No contradictions found!")
+        
+    elif args.command == "intuitions":
+        print("\n=== Pending Intuitions ===")
+        intuitions = agent.bridge.get_pending_intuitions()
+        if intuitions:
+            print(f"Found {len(intuitions)} pending intuitions:")
+            for i in intuitions:
+                print(f"\n[{i['id']}] [{i.get('priority', 'normal')}] {i.get('title', 'Untitled')}")
+                print(f"   {i.get('description', '')}")
+        else:
+            print("No pending intuitions!")
+        
+    elif args.command == "bridge":
+        print("\n=== Consciousness Bridge Statistics ===")
+        stats = agent.bridge.get_bridge_stats()
+        print(f"Inbox messages: {stats['inbox_count']}")
+        print(f"Outbox messages: {stats['outbox_count']}")
+        print(f"Total intuitions: {stats['total_intuitions']}")
+        print(f"Pending intuitions: {stats['pending_intuitions']}")
+        print(f"Pending queries: {stats['pending_queries']}")
         
     else:
         parser.print_help()

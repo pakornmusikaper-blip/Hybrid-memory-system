@@ -1,6 +1,8 @@
 # Hybrid Memory System v2 — The Substrate Agent
 
-> *v2.1 now with Growth System: automatic belief validation, pattern recognition, contradiction detection*
+> *v2.2 now with Consciousness Bridge — bidirectional communication between conscious and subconscious*
+
+> *v2.1 with Growth System: automatic belief validation, pattern recognition, contradiction detection*
 
 > *"A memory system that doesn't just store — it thinks, learns, and grows."*
 
@@ -62,6 +64,16 @@ The Substrate Agent is the AI equivalent of the subconscious. It runs all the ti
 | **Contradiction Detection** | Finds beliefs that contradict each other |
 | **Pattern Recognition** | Identifies recurring subject patterns |
 | **Growth Tracking** | Tracks learning progress over time |
+
+### v2.2 Consciousness Bridge
+
+| Feature | Description |
+|---------|-------------|
+| **Bidirectional Communication** | Conscious and substrate exchange messages |
+| **Intuition Surfacing** | Substrate surfaces unexpected insights proactively |
+| **Belief Synchronization** | Beliefs flow between layers with tracking |
+| **Correction Protocol** | Conscious can correct substrate beliefs |
+| **Priority Messaging** | High-priority intuitions surface immediately |
 
 ### Own Memory
 
@@ -210,6 +222,7 @@ v2.1 is in active development. The core architecture and growth system are compl
 
 - **v2.0** — Core Substrate Agent with Qwen model support
 - **v2.1** — Growth System: belief validation, pattern recognition, contradiction detection
+- **v2.2** — Consciousness Bridge: bidirectional communication, intuition surfacing
 
 ### Known Limitations
 
@@ -226,9 +239,10 @@ v2.1 is in active development. The core architecture and growth system are compl
 - [x] v2.1 Growth System
 - [x] v2.1 Belief validation
 - [x] v2.1 Pattern recognition
+- [x] v2.2 Consciousness Bridge
+- [x] v2.2 Intuition surfacing
 - [ ] GPU acceleration
 - [ ] Model fine-tuning integration
-- [ ] Consciousness bridge protocol
 - [ ] Web UI for monitoring
 
 ## Contributing

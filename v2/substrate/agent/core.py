@@ -64,6 +64,11 @@ class SubstrateAgent:
         from .growth import GrowthSystem
         self.growth = GrowthSystem(self.memory_root)
         
+        # Consciousness Bridge (v2.2)
+        from .bridge import ConsciousnessBridge, IntuitionGenerator
+        self.bridge = ConsciousnessBridge(self.memory_root)
+        self.intuition_gen = IntuitionGenerator(self.bridge)
+        
         # Background loop state
         self._running = False
         self._thread = None
@@ -83,6 +88,7 @@ class SubstrateAgent:
         print(f"[Substrate] Model: {self.config['model']['name']}")
         print(f"[Substrate] Device: {self.config['runtime']['device']}")
         print(f"[Substrate] Growth System: v2.1 enabled")
+        print(f"[Substrate] Consciousness Bridge: v2.2 enabled")
     
     def _load_config(self, config_path: Path) -> Dict:
         with open(config_path) as f:

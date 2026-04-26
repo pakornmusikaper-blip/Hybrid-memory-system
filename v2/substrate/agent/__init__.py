@@ -8,6 +8,7 @@ A conscious-subconscious architecture for AI memory:
 
 from .core import SubstrateAgent
 from .growth import GrowthSystem
+from .bridge import ConsciousnessBridge, IntuitionGenerator
 
-__version__ = "2.1.0"
-__all__ = ["SubstrateAgent", "GrowthSystem"]
+__version__ = "2.2.0"
+__all__ = ["SubstrateAgent", "GrowthSystem", "ConsciousnessBridge", "IntuitionGenerator"]
