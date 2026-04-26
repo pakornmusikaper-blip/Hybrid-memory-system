@@ -1,0 +1,109 @@
+# Substrate Agent Configuration
+# Substrate: Background Intelligence for Hybrid Memory System v2
+
+model:
+  # Model selection - can be swapped easily
+  name: Qwen/Qwen2-0.5B
+  # Alternatives:
+  #   - Qwen/Qwen2-1.5B (more capable, needs GPU)
+  #   - Qwen/Qwen2-1.8B (more capable, needs GPU)
+  #   - microsoft/Phi-3-mini-4k-instruct (excellent reasoning)
+  #   - mistralai/Mistral-7B-Instruct-v0.2 (best balance, needs more RAM)
+  trust_remote_code: true
+  # Quantization: none, 8-bit, 4-bit
+  quantization: 4-bit  # 4-bit for CPU inference speed
+  
+runtime:
+  # CPU or cuda
+  device: cpu
+  # Max memory to use for model (GB)
+  max_memory_gb: 8
+  # Number of threads for CPU inference
+  threads: 4
+  
+operation:
+  # Background loop interval (seconds)
+  cycle_seconds: 60
+  # Max beliefs to keep in memory
+  max_beliefs: 1000
+  # Days before belief confidence decays
+  confidence_decay_days: 30
+  # Fallback mode when model is unavailable (for development)
+  fallback_mode: false
+  
+growth:
+  # Max new beliefs per cycle
+  max_beliefs_per_cycle: 3
+  # Connection batch size
+  connection_batch_size: 10
+  # Hours between validation cycles
+  validation_interval_hours: 6
+  
+validation:
+  # Strict validation mode
+  strict_mode: false
+  # Allow belief corrections
+  allow_corrections: true
+  # Decay factor per month
+  decay_factor: 0.9
+  
+anticipation:
+  # Max cached anticipations
+  max_cached: 50
+  # Hours before cache is stale
+  freshness_hours: 24
+  # Prewarm anticipations on startup
+  prewarm_on_startup: true
+  
+communication:
+  # Max seconds to wait for response
+  response_timeout_seconds: 5
+  # Max tokens for context
+  max_context_tokens: 2048
+
+prompts:
+  absorb: |
+    You are Substrate, a background intelligence agent.
+    Analyze this context and update your understanding.
+    
+    Context: {context}
+    
+    Identify:
+    1. Key facts and their relationships
+    2. Patterns you observe
+    3. What might be needed next
+    4. Any contradictions or gaps
+    
+    Respond with a structured analysis.
+
+  weave: |
+    Weave context from multiple sources into a coherent bundle.
+    
+    Sources: {sources}
+    
+    Create a context bundle that includes:
+    - Current state summary
+    - Relevant history
+    - Connections to other knowledge
+    - Anticipations for next steps
+    
+    Respond concisely.
+
+  belief: |
+    Based on accumulated context, form a clear belief statement.
+    
+    Context: {context}
+    Related beliefs: {related}
+    
+    State the belief clearly and assign a confidence score (0.0-1.0).
+    Format: {format_example}
+    Where format_example is: {{"statement": "...", "confidence": 0.0-1.0, "reasoning": "..."}}
+
+  validate: |
+    Validate this belief against known facts.
+    
+    Belief: {belief}
+    Known facts: {facts}
+    
+    Return: confirm | contradict | modify
+    If modify, state the corrected belief.

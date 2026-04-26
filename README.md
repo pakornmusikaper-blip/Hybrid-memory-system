@@ -1,5 +1,7 @@
 # Hybrid Memory System
 
+> **v2 is here!** The Substrate Agent brings autonomous learning to the memory system. [Learn more →](v2/README.md)
+
 A documentation-first hybrid memory architecture for long-running AI agents.
 
 Most agent memory systems either keep too much chat history or depend too heavily on retrieval alone. Hybrid Memory System gives long-running agents a more durable knowledge model by separating evidence, facts, synthesis, and search into distinct layers.
