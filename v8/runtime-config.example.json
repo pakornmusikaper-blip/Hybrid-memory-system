@@ -1,0 +1,14 @@
+{
+  "local_enabled": true,
+  "external_enabled": false,
+  "local_model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+  "external_model_name": "MiniMax-M2.7",
+  "external_api_key_env": "MINIMAX_API_KEY",
+  "privacy_default": "normal",
+  "budget": {
+    "max_requests_per_day": 10,
+    "max_cost_usd_per_day": 1.0,
+    "used_requests_today": 0,
+    "used_cost_usd_today": 0.0
+  }
+}

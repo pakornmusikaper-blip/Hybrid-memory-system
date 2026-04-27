@@ -1,0 +1,14 @@
+{
+  "starter": {
+    "max_requests_per_day": 5,
+    "max_cost_usd_per_day": 0.50
+  },
+  "balanced": {
+    "max_requests_per_day": 20,
+    "max_cost_usd_per_day": 2.00
+  },
+  "aggressive": {
+    "max_requests_per_day": 50,
+    "max_cost_usd_per_day": 10.00
+  }
+}
