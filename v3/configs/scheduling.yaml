@@ -1,0 +1,22 @@
+scheduling:
+  fastLoopSeconds: 15
+  mediumLoopSeconds: 180
+  slowLoopSeconds: 1800
+  deepLoopSeconds: 14400
+
+workloads:
+  fast:
+    - bridgePoll
+    - healthUpdate
+    - lightFileCheck
+  medium:
+    - absorbRecentChanges
+    - anticipationRefresh
+  slow:
+    - contradictionScan
+    - confidenceDecay
+    - patternRecognition
+  deep:
+    - reflectiveReview
+    - cleanup
+    - archivalSuggestions

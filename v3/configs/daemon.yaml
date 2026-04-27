@@ -1,0 +1,16 @@
+daemon:
+  name: substrate-daemon
+  workdir: ~/.openclaw/workspace/knowledge-system
+  pidFile: runtime/substrate.pid
+  logFile: runtime/substrate.log
+  lockFile: runtime/substrate.lock
+  restart:
+    enabled: true
+    maxRestartsPerHour: 10
+    backoffSeconds: 5
+  health:
+    writeEverySeconds: 30
+    stalledAfterSeconds: 300
+    degradedAfterErrors: 3
+  runtimeMode: auto
+  devicePreference: auto
