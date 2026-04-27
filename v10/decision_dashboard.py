@@ -23,6 +23,7 @@ from v9.trial_log import TrialLog
 from v9.trial_history_report import TrialHistoryReport
 from v9.quality_compare import QualityComparison
 from v10.recommendation_layer import RecommendationLayer
+from v10.policy_tuning import PolicyTuningAssistant
 
 
 class DecisionDashboard:
@@ -62,6 +63,7 @@ class DecisionDashboard:
             "quality_summary": quality_summary,
         }
         payload["recommendations"] = RecommendationLayer().recommend(payload)
+        payload["policy_suggestions"] = [s.to_dict() for s in PolicyTuningAssistant().suggest(payload)]
         return payload
 
     def render_text(self) -> str:
@@ -91,5 +93,10 @@ class DecisionDashboard:
             lines.append('Recommendations:')
             for rec in recs:
                 lines.append(f"- {rec}")
+        policy_suggestions = data.get('policy_suggestions', [])
+        if policy_suggestions:
+            lines.append('Policy tuning suggestions:')
+            for suggestion in policy_suggestions:
+                lines.append(f"- [{suggestion['area']}] {suggestion['recommendation']} ({suggestion['confidence']:.2f})")
         lines.append('=' * 52)
         return '\n'.join(lines)
