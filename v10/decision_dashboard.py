@@ -22,6 +22,7 @@ from v9.benchmark_report import load_report
 from v9.trial_log import TrialLog
 from v9.trial_history_report import TrialHistoryReport
 from v9.quality_compare import QualityComparison
+from v10.recommendation_layer import RecommendationLayer
 
 
 class DecisionDashboard:
@@ -49,7 +50,7 @@ class DecisionDashboard:
         if self.trial_log_path and self.trial_log_path.exists():
             trial_history = TrialHistoryReport(TrialLog(self.trial_log_path)).build()
 
-        return {
+        payload = {
             "status": status_panel(self.root),
             "beliefs": beliefs_panel(self.root),
             "concepts": concepts_panel(self.root),
@@ -60,6 +61,8 @@ class DecisionDashboard:
             "trial_history": trial_history,
             "quality_summary": quality_summary,
         }
+        payload["recommendations"] = RecommendationLayer().recommend(payload)
+        return payload
 
     def render_text(self) -> str:
         data = self.build()
@@ -83,5 +86,10 @@ class DecisionDashboard:
         if data['quality_summary']:
             lines.append(f"Avg richness         : {data['quality_summary']['avg_richness']}")
             lines.append(f"Avg appropriateness  : {data['quality_summary']['avg_appropriateness']}")
+        recs = data.get('recommendations', [])
+        if recs:
+            lines.append('Recommendations:')
+            for rec in recs:
+                lines.append(f"- {rec}")
         lines.append('=' * 52)
         return '\n'.join(lines)
