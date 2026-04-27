@@ -42,9 +42,17 @@ class MemoryPersistence:
             json.dump(payload, f, indent=2)
         return path
 
+    def write_reflections(self, reflections) -> Path:
+        path = self.memory_dir / "reflections.json"
+        payload = [r.to_dict() if hasattr(r, "to_dict") else r for r in reflections]
+        with open(path, "w") as f:
+            json.dump(payload, f, indent=2)
+        return path
+
     def snapshot(self) -> Dict:
         return {
             "beliefs": str(self.memory_dir / "beliefs.json"),
             "concepts": str(self.memory_dir / "concepts.json"),
             "cognition": str(self.runtime_dir / "cognition.json"),
+            "reflections": str(self.memory_dir / "reflections.json"),
         }

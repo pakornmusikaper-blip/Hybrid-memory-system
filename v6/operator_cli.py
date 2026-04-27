@@ -14,7 +14,7 @@ repo = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo))
 sys.path.insert(0, str(repo / "v5"))
 
-from monitor import status_panel, beliefs_panel, concepts_panel, cognition_panel
+from monitor import status_panel, beliefs_panel, concepts_panel, cognition_panel, reflections_panel
 from v6.runtime_config import ExternalBudget, RuntimeConfig
 from v6.usage_ledger import UsageLedger
 from v6.usage_report import UsageReport
@@ -38,6 +38,7 @@ def command_status(root: Path) -> str:
         beliefs_panel(root),
         concepts_panel(root),
         cognition_panel(root),
+        reflections_panel(root),
     ])
 
 
@@ -69,6 +70,7 @@ def main():
                 "beliefs": beliefs_panel(root),
                 "concepts": concepts_panel(root),
                 "cognition": cognition_panel(root),
+                "reflections": reflections_panel(root),
             }
             print(json.dumps(payload, indent=2))
         else:
@@ -91,6 +93,7 @@ def main():
                 "beliefs": beliefs_panel(root),
                 "concepts": concepts_panel(root),
                 "cognition": cognition_panel(root),
+                "reflections": reflections_panel(root),
                 "usage": usage.build(),
             }
             print(json.dumps(payload, indent=2))

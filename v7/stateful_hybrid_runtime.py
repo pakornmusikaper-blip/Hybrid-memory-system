@@ -9,6 +9,7 @@ from pathlib import Path
 
 from v5.belief_lifecycle import BeliefLifecycle, Belief
 from v5.clustering import BeliefClustering, cluster_beliefs
+from v5.self_reflection import SelfReflectionEngine
 from v6.hybrid_runtime import HybridRuntime
 from v7.runtime_state_writer import RuntimeStateWriter
 
@@ -19,6 +20,7 @@ class StatefulHybridRuntime:
         self.lifecycle = BeliefLifecycle()
         self.clustering = BeliefClustering()
         self.state_writer = RuntimeStateWriter(root)
+        self.reflection_engine = SelfReflectionEngine()
 
     def process_event(self, event: dict) -> dict:
         result = self.runtime.process_event(event)
@@ -43,9 +45,19 @@ class StatefulHybridRuntime:
         for concept in concepts:
             self.clustering.cite(concept.id)
 
+        reflection = self.reflection_engine.reflect(
+            "event-processed",
+            self.lifecycle.stats(),
+            self.clustering.stats(),
+            {"inbox": 0, "outbox": 0, "cycles": 0, "consecutive_errors": 0, "fallback_rate": 0.0},
+            self.state_writer.mode_distribution,
+            self.state_writer.wake_history,
+        )
+
         snapshot = self.state_writer.flush(
             beliefs=self.lifecycle.all(),
             concepts=self.clustering.all(),
+            reflections=self.reflection_engine.all(),
         )
         result["persisted"] = snapshot
         return result

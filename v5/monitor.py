@@ -168,12 +168,33 @@ def cognition_panel(root: Path) -> str:
     return "\n".join(lines)
 
 
+def reflections_panel(root: Path) -> str:
+    reflections_path = root / "memory" / "reflections.json"
+    if not reflections_path.exists():
+        return "  (no reflections file found)\n"
+
+    reflections = read_json(reflections_path)
+    total = len(reflections) if isinstance(reflections, list) else 0
+    latest = reflections[-1] if total else {}
+    summary = latest.get("summary", "") if isinstance(latest, dict) else ""
+    trigger = latest.get("trigger", "unknown") if isinstance(latest, dict) else "unknown"
+    lines = [
+        f"── Reflection State ───────────────────────",
+        f"  total reflections : {total}",
+        f"  latest trigger    : {trigger}",
+        f"  latest summary    : {summary[:120]}",
+        f"",
+    ]
+    return "\n".join(lines)
+
+
 def full_report(root: Path) -> str:
     lines = [
         status_panel(root),
         beliefs_panel(root),
         concepts_panel(root),
         cognition_panel(root),
+        reflections_panel(root),
         f"{'='*50}",
         f"  Generated: {datetime.now().isoformat()}",
         f"{'='*50}",

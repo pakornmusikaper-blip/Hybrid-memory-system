@@ -24,11 +24,13 @@ class RuntimeStateWriter:
         self.wake_history.append(action)
         self.wake_history = self.wake_history[-200:]
 
-    def flush(self, *, beliefs, concepts):
+    def flush(self, *, beliefs, concepts, reflections=None):
         self.persistence.write_beliefs(beliefs)
         self.persistence.write_concepts(concepts)
         self.persistence.write_cognition(
             mode_distribution=self.mode_distribution,
             wake_history=self.wake_history,
         )
+        if reflections is not None:
+            self.persistence.write_reflections(reflections)
         return self.persistence.snapshot()
