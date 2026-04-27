@@ -68,6 +68,7 @@ class QueueRuntime:
                 "processed_at": datetime.now().isoformat(),
                 "summary": self._summarize(payload),
                 "attempts": int(payload.get("attempts", 0)) + 1,
+                "response": self._response_payload(payload),
             }
 
             out_path = self.outbox_dir / f"{result['id']}.json"
@@ -122,6 +123,24 @@ class QueueRuntime:
         if payload.get("type") == "correction":
             return f"Handled correction for belief {payload.get('belief_id', 'unknown')}"
         return f"Handled payload type {payload.get('type', 'unknown')}"
+
+    def _response_payload(self, payload: Dict) -> Dict[str, object]:
+        if payload.get("type") == "query":
+            return {
+                "message_type": "response",
+                "query": payload.get("query", ""),
+                "content": f"Prepared runtime response for query: {payload.get('query', '')[:120]}",
+            }
+        if payload.get("type") == "correction":
+            return {
+                "message_type": "correction_applied",
+                "belief_id": payload.get("belief_id"),
+                "content": payload.get("correction", ""),
+            }
+        return {
+            "message_type": "generic",
+            "content": self._summarize(payload),
+        }
 
     def stats(self) -> Dict[str, int]:
         return {
