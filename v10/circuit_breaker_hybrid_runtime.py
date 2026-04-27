@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""
+v10.x Circuit-breaker-aware hybrid runtime.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from v4.prioritizer import EventPrioritizer
+from v4.mode_policy import AdaptiveModePolicy
+from v4.wake_policy import ConsciousWakePolicy
+from v4.cost_budget_policy import CostBudgetPolicy
+from v6.model_adapter import HeuristicAdapter
+from v6.model_routing_policy import ModelRoutingPolicy
+from v6.real_qwen_adapter import RealQwenAdapter
+from v6.minimax_adapter import MiniMaxAdapter
+from v10.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitState
+
+
+class CircuitBreakerHybridRuntime:
+    def __init__(self, v3_runtime, circuit_path: Path | None = None):
+        self.runtime = v3_runtime
+        self.circuit = CircuitBreaker(circuit_path, CircuitBreakerConfig(
+            failures_to_open=3,
+            cooldown_seconds=60.0,
+            half_open_successes=2,
+        ))
+        self.prioritizer = EventPrioritizer()
+        self.mode_policy = AdaptiveModePolicy()
+        self.wake_policy = ConsciousWakePolicy()
+        self.budget_policy = CostBudgetPolicy()
+        self.routing_policy = ModelRoutingPolicy()
+        self.local_adapter = RealQwenAdapter()
+        self.external_adapter = MiniMaxAdapter()
+        self.heuristic_adapter = HeuristicAdapter()
+        self.spend_log: list[float] = []
+        self.accumulated_insights: list[dict] = []
+
+    def process_event(self, event: dict) -> dict:
+        self.runtime.log(f"cb:processing:{event.get('id', 'unknown')}")
+
+        priority = self.prioritizer.decide(event)
+        health = self._get_health()
+        mode_decision = self.mode_policy.decide(priority.to_dict(), health, self.runtime.queues.stats())
+        wake_decision = self.wake_policy.decide(mode_decision.to_dict(), event, self._recent_spend_trend())
+        budget_decision = self.budget_policy.decide(wake_decision.to_dict(), health, self._recent_spend_trend())
+
+        if wake_decision.action == "silent":
+            return {"status": "silent", "event_id": event.get("id")}
+
+        if wake_decision.action == "accumulate":
+            self.accumulated_insights.append({"event": event, "priority": priority.to_dict()})
+            return {"status": "accumulated", "event_id": event.get("id")}
+
+        route = self.routing_policy.decide(
+            privacy=event.get("privacy", "normal"),
+            budget=budget_decision.budget_band,
+            mode=self._route_mode_from_budget(budget_decision.max_depth),
+            urgency=wake_decision.urgency,
+        )
+
+        # Block external if circuit is open
+        if route.backend == "external" and not self.circuit.allow_request():
+            route.backend = "heuristic"
+
+        adapter = self._select_adapter(route.backend)
+        operation = event.get("operation", "generate")
+        payload = event.get("content", event.get("prompt", ""))
+
+        try:
+            result = self._run_adapter(adapter, operation, payload, self._route_mode_from_budget(budget_decision.max_depth))
+            if route.backend == "external":
+                self.circuit.record_success()
+            return {
+                "status": "processed",
+                "event_id": event.get("id"),
+                "route": route.to_dict(),
+                "result": result.to_dict(),
+                "circuit_state": self.circuit.snapshot().state,
+            }
+        except Exception as e:
+            if route.backend == "external":
+                self.circuit.record_failure()
+            raise
+
+    def _run_adapter(self, adapter, operation: str, payload: str, mode: str):
+        if operation == "summary":
+            return adapter.summarize(payload)
+        if operation == "reflect":
+            return adapter.reflect(payload)
+        return adapter.generate(payload, mode)
+
+    def _route_mode_from_budget(self, depth: str) -> str:
+        table = {"heuristic": "light", "light": "light", "standard": "standard", "focused": "focused", "deep": "reflect"}
+        return table.get(depth, "standard")
+
+    def _select_adapter(self, backend: str):
+        if backend == "external":
+            return self.external_adapter
+        if backend == "heuristic":
+            return self.heuristic_adapter
+        return self.local_adapter
+
+    def _get_health(self) -> dict:
+        health_path = self.runtime.runtime_dir / "health.json"
+        if health_path.exists():
+            return json.loads(health_path.read_text())
+        return {"status": "healthy"}
+
+    def _recent_spend_trend(self) -> float:
+        if not self.spend_log:
+            return 0.5
+        return sum(self.spend_log[-5:]) / len(self.spend_log)
+
+    def _track_spend(self, budget_decision):
+        spend_map = {"minimum": 0.1, "moderate": 0.4, "maximum": 0.9}
+        spend = spend_map.get(budget_decision.spend_level, 0.3)
+        self.spend_log.append(spend)
+        if len(self.spend_log) > 20:
+            self.spend_log = self.spend_log[-20:]
