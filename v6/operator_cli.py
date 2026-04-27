@@ -11,12 +11,13 @@ import sys
 from pathlib import Path
 
 repo = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo))
 sys.path.insert(0, str(repo / "v5"))
 
 from monitor import status_panel, beliefs_panel, concepts_panel, cognition_panel
-from runtime_config import ExternalBudget, RuntimeConfig
-from usage_ledger import UsageLedger
-from usage_report import UsageReport
+from v6.runtime_config import ExternalBudget, RuntimeConfig
+from v6.usage_ledger import UsageLedger
+from v6.usage_report import UsageReport
 
 
 def build_usage(ledger_path: Path, request_limit: int, cost_limit: float):

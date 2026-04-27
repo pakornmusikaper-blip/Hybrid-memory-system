@@ -5,8 +5,8 @@ v6.7 Bridge persisted ledger into runtime budget counters.
 
 from __future__ import annotations
 
-from runtime_config import RuntimeConfig
-from usage_ledger import UsageLedger
+from v6.runtime_config import RuntimeConfig
+from v6.usage_ledger import UsageLedger
 
 
 def sync_budget_from_ledger(config: RuntimeConfig, ledger: UsageLedger) -> RuntimeConfig:

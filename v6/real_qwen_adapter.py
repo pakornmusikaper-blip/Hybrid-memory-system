@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict
 
-from model_adapter import ModelResult, HeuristicAdapter
+from v6.model_adapter import ModelResult, HeuristicAdapter
 
 
 @dataclass

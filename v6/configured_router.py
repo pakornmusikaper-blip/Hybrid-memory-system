@@ -8,8 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Dict
 
-from model_routing_policy import ModelRoutingPolicy
-from runtime_config import RuntimeConfig
+from v6.model_routing_policy import ModelRoutingPolicy
+from v6.runtime_config import RuntimeConfig
 
 
 @dataclass
