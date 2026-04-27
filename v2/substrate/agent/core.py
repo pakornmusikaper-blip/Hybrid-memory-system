@@ -181,12 +181,10 @@ class SubstrateAgent:
             print(f"[Substrate] Model loaded successfully")
             print(f"[Substrate] Device: {device} | Quantization: {quant}")
             return self.model
-            
-            print(f"[Substrate] Model loaded successfully")
-            return self.model
     
     def generate(self, prompt: str, max_tokens: int = 256) -> str:
         """Generate text using the model."""
+        max_tokens = min(max_tokens, self.config.get("communication", {}).get("max_generation_tokens", 256))
         try:
             model = self.load_model()
             
@@ -204,13 +202,14 @@ class SubstrateAgent:
             
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
-            # Remove the prompt from response
             if response.startswith(prompt):
                 response = response[len(prompt):].strip()
             
             return response
         except Exception as e:
             print(f"[Substrate] Generation error: {e}")
+            if self.config.get("operation", {}).get("heuristic_fallback", True):
+                return self._heuristic_fallback(prompt)
             return f"[Error: {str(e)[:100]}] -- Fallback response"
     
     # ─────────────────────────────────────────────────────────────
@@ -298,7 +297,8 @@ class SubstrateAgent:
         
         prompt = prompt_template.format(
             context=woven.get("woven_content", ""),
-            related=[b.get("statement", "") for b in related]
+            related=[b.get("statement", "") for b in related],
+            format_example='{"statement": "...", "confidence": 0.0-1.0, "reasoning": "..."}'
         )
         
         try:
@@ -579,11 +579,17 @@ class SubstrateAgent:
                     try:
                         parsed = json.loads(match)
                         if "statement" in parsed or "confidence" in parsed:
+                            confidence = parsed.get("confidence", 0.5)
+                            try:
+                                confidence = float(confidence)
+                            except Exception:
+                                confidence = 0.5
+                            confidence = max(0.0, min(1.0, confidence))
                             beliefs.append({
                                 "id": str(uuid.uuid4())[:8],
                                 "statement": parsed.get("statement", response[:100]),
-                                "confidence": parsed.get("confidence", 0.5),
-                                "subject": "general",
+                                "confidence": confidence,
+                                "subject": parsed.get("subject", "general"),
                                 "evidence": [{"source": "woven_context", "strength": 0.6}],
                                 "created": datetime.now().isoformat(),
                                 "status": "active"
@@ -609,6 +615,11 @@ class SubstrateAgent:
                 })
         
         return beliefs
+
+    def _heuristic_fallback(self, prompt: str) -> str:
+        """Best-effort fallback when live generation is unavailable or too slow."""
+        compact = " ".join(prompt.split())[:220]
+        return f'{{"statement": "Heuristic fallback from prompt: {compact}", "confidence": 0.35, "reasoning": "model unavailable or generation failed"}}'
     
     def _implicitly_connected(self, belief1: Dict, belief2: Dict) -> bool:
         """Check if two beliefs are implicitly connected."""

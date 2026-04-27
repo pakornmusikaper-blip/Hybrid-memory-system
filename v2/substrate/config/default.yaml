@@ -14,12 +14,14 @@ model:
   quantization: 4-bit  # 4-bit for CPU inference speed
   
 runtime:
-  # CPU or cuda
+  # CPU, cuda, or auto
   device: cpu
   # Max memory to use for model (GB)
   max_memory_gb: 8
   # Number of threads for CPU inference
   threads: 4
+  # Soft timeout for generation (best effort, seconds)
+  generation_timeout_seconds: 20
   
 operation:
   # Background loop interval (seconds)
@@ -28,8 +30,10 @@ operation:
   max_beliefs: 1000
   # Days before belief confidence decays
   confidence_decay_days: 30
-  # Fallback mode when model is unavailable (for development)
+  # Fallback mode when model is unavailable or too slow
   fallback_mode: false
+  # Use heuristic fallback response when generation fails
+  heuristic_fallback: true
   
 growth:
   # Max new beliefs per cycle
@@ -60,6 +64,8 @@ communication:
   response_timeout_seconds: 5
   # Max tokens for context
   max_context_tokens: 2048
+  # Max tokens to request from generation
+  max_generation_tokens: 256
 
 prompts:
   absorb: |
