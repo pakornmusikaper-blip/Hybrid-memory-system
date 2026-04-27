@@ -20,12 +20,14 @@ class QueueRuntime:
         self.processed_dir = self.queues_dir / "processed"
         self.failed_dir = self.queues_dir / "failed"
         self.duplicate_dir = self.queues_dir / "duplicates"
+        self.poison_dir = self.queues_dir / "poison"
         for d in [
             self.inbox_dir,
             self.outbox_dir,
             self.processed_dir,
             self.failed_dir,
             self.duplicate_dir,
+            self.poison_dir,
         ]:
             d.mkdir(parents=True, exist_ok=True)
 
@@ -60,7 +62,20 @@ class QueueRuntime:
                 "summary": f"Skipped duplicate payload {payload_id}",
             }
 
+        not_before = payload.get("not_before")
+        if not_before and datetime.now() < datetime.fromisoformat(not_before):
+            return {
+                "id": payload_id,
+                "type": payload.get("type", "unknown"),
+                "status": "deferred",
+                "processed_at": datetime.now().isoformat(),
+                "summary": f"Deferred until {not_before}",
+            }
+
         try:
+            if payload.get("type") == "poison-test":
+                raise RuntimeError("intentional poison test payload")
+
             result = {
                 "id": payload_id,
                 "type": payload.get("type", "unknown"),
@@ -88,19 +103,21 @@ class QueueRuntime:
         payload["updated_at"] = datetime.now().isoformat()
 
         if attempts >= 3:
-            fail_path = self.failed_dir / path.name
-            with open(fail_path, "w") as f:
+            poison_path = self.poison_dir / path.name
+            with open(poison_path, "w") as f:
                 json.dump(payload, f, indent=2)
             path.unlink(missing_ok=True)
             return {
                 "id": payload.get("id", path.stem),
                 "type": payload.get("type", "unknown"),
-                "status": "failed",
+                "status": "poisoned",
                 "processed_at": datetime.now().isoformat(),
-                "summary": f"Failed after {attempts} attempts: {error}",
+                "summary": f"Moved to poison queue after {attempts} attempts: {error}",
                 "attempts": attempts,
             }
 
+        backoff_seconds = 2 ** attempts
+        payload["not_before"] = datetime.fromtimestamp(datetime.now().timestamp() + backoff_seconds).isoformat()
         with open(path, "w") as f:
             json.dump(payload, f, indent=2)
         return {
@@ -110,6 +127,7 @@ class QueueRuntime:
             "processed_at": datetime.now().isoformat(),
             "summary": f"Retry scheduled after error: {error}",
             "attempts": attempts,
+            "backoff_seconds": backoff_seconds,
         }
 
     def _already_processed(self, payload_id: str) -> bool:
@@ -149,4 +167,5 @@ class QueueRuntime:
             "processed": len(list(self.processed_dir.glob("*.json"))),
             "failed": len(list(self.failed_dir.glob("*.json"))),
             "duplicates": len(list(self.duplicate_dir.glob("*.json"))),
+            "poison": len(list(self.poison_dir.glob("*.json"))),
         }
