@@ -16,6 +16,7 @@ from typing import Dict, List
 import yaml
 
 from .health import make_health
+from .queue_runtime import QueueRuntime
 from .scheduler import Scheduler
 
 
@@ -45,6 +46,7 @@ class SubstrateRuntime:
         self.daemon_config = self._load_yaml(self.config_dir / "daemon.yaml")
         self.scheduling_config = self._load_yaml(self.config_dir / "scheduling.yaml")
         self.scheduler = Scheduler(self.scheduling_config)
+        self.queues = QueueRuntime(self.root)
 
     def _load_yaml(self, path: Path) -> Dict:
         with open(path) as f:
@@ -77,7 +79,13 @@ class SubstrateRuntime:
             task_names.append(task.name)
             task.mark(now)
             self.log(f"task:{task.name}")
-        self.state.last_tasks = task_names
+            if task.name == "fast":
+                processed = self.queues.process_next()
+                if processed:
+                    self.log(f"queue:processed:{processed['id']}")
+                    task_names.append("queue-processed")
+        if task_names:
+            self.state.last_tasks = task_names
         return task_names
 
     def tick(self):
@@ -86,7 +94,7 @@ class SubstrateRuntime:
             task_names = self.run_due_tasks()
             self.state.last_success = datetime.now().isoformat()
             self.state.consecutive_errors = 0
-            self.state.mode = "active-absorb" if task_names else "idle-watch"
+            self.state.mode = "active-absorb" if task_names else self.state.mode
             self.write_state()
             self.write_health()
         except Exception as e:
