@@ -41,7 +41,7 @@ class SubstrateAgent:
         
         # Load config
         if config_path is None:
-            config_path = self.memory_root / "v2" / "substrate" / "config" / "default.yaml"
+            config_path = Path(__file__).resolve().parent.parent / "config" / "default.yaml"
         self.config = self._load_config(config_path)
         
         # Own memory paths

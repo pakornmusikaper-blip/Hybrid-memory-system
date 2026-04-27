@@ -27,7 +27,7 @@ from substrate.agent.core import SubstrateAgent
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Substrate Agent CLI v2.1")
+    parser = argparse.ArgumentParser(description="Substrate Agent CLI v2.3")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
     # Run command
@@ -60,6 +60,15 @@ def main():
     
     # Contradictions command (v2.1)
     subparsers.add_parser("contradictions", help="Show belief contradictions")
+
+    # Intuitions command (v2.2)
+    subparsers.add_parser("intuitions", help="Show pending intuitions")
+
+    # Bridge command (v2.2)
+    subparsers.add_parser("bridge", help="Show bridge statistics")
+
+    # GPU command (v2.3)
+    subparsers.add_parser("gpu", help="Show GPU info")
     
     args = parser.parse_args()
     
