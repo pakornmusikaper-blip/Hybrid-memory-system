@@ -82,7 +82,9 @@ def scenario_absorb_and_belief():
     agent = SubstrateAgent(root, cfg)
 
     # monkeypatch generate to avoid heavy inference during scenario hardening
-    agent.generate = lambda prompt, max_tokens=256: '{"statement": "Pakorn prefers a living memory system", "confidence": 0.82, "reasoning": "derived from context"}'
+    agent.generate = (
+        lambda prompt, max_tokens=256: '{"statement": "Pakorn prefers a living memory system", "confidence": 0.82, "reasoning": "derived from context"}'
+    )
 
     agent.absorb(
         {
@@ -150,7 +152,9 @@ def scenario_short_background_loop():
     write_fixture(root)
     cfg = write_config(root)
     agent = SubstrateAgent(root, cfg)
-    agent.generate = lambda prompt, max_tokens=256: '{"statement": "Background loop observation", "confidence": 0.6}'
+    agent.generate = (
+        lambda prompt, max_tokens=256: '{"statement": "Background loop observation", "confidence": 0.6}'
+    )
 
     agent.start()
     time.sleep(2.5)

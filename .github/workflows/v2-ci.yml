@@ -1,0 +1,49 @@
+name: substrate-v2-ci
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'v2/**'
+      - '.github/workflows/v2-ci.yml'
+  pull_request:
+    paths:
+      - 'v2/**'
+      - '.github/workflows/v2-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch transformers accelerate pyyaml pytest black mypy
+
+      - name: Install package
+        run: pip install .
+
+      - name: Run tests
+        run: pytest
+
+      - name: Black check
+        run: black --check .
+
+      - name: Mypy check
+        run: mypy substrate || true
