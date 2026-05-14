@@ -14,6 +14,23 @@ Provide an agent CLI for building desktop workflows from natural language plus a
 - Generate a vision-agent prompt that can be sent to a multimodal model or screen automation runtime.
 - Preview every action with `dry-run` before any future executor clicks the screen.
 
+## Browser Interface
+
+Run the local interface when you want to attach images and chat with the agent instead of writing CLI flags manually:
+
+```bash
+python v12/visual_workflow_cli.py interface --host 127.0.0.1 --port 8765
+```
+
+Open `http://127.0.0.1:8765`, attach one or more button/screen images, then chat in Thai or English. The page sends the images as browser data URIs to the local agent, stores them in the workspace, converts them into AI-readable anchor payloads, and returns:
+
+- workflow JSON
+- dry-run events
+- vision-agent prompt
+- saved workflow path
+
+The interface is intentionally review-first: it does not click the OS directly. Use the generated workflow with a separate executor after inspection.
+
 ## Commands
 
 ### Create a workflow

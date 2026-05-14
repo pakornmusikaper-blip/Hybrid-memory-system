@@ -110,6 +110,15 @@ def cmd_scan(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def cmd_interface(args: argparse.Namespace) -> None:
+    from v12.visual_workflow_interface import build_server
+
+    server = build_server(args.host, args.port, Path(args.workspace))
+    print(f"Visual Workflow Agent interface: http://{args.host}:{args.port}")
+    print(f"Workspace: {args.workspace}")
+    server.serve_forever()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Visual workflow agent CLI for image-anchored desktop workflows")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -150,6 +159,12 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument("--screen", required=True, help="PNG screenshot/screen image to scan")
     scan.add_argument("--require-match", action="store_true", help="exit non-zero if no anchor is found")
     scan.set_defaults(func=cmd_scan)
+
+    interface = sub.add_parser("interface", help="run browser UI for attaching images and chatting with the workflow agent")
+    interface.add_argument("--host", default="127.0.0.1")
+    interface.add_argument("--port", type=int, default=8765)
+    interface.add_argument("--workspace", default="/tmp/visual-workflow-interface")
+    interface.set_defaults(func=cmd_interface)
     return parser
 
 

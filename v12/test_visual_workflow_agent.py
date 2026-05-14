@@ -18,6 +18,7 @@ from visual_workflow_agent import (
     find_template_in_image,
     image_to_ai_language,
 )
+from visual_workflow_interface import WorkflowChatSession
 
 
 PNG_1X1 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
@@ -98,6 +99,24 @@ class VisualWorkflowAgentTest(unittest.TestCase):
             self.assertIsNotNone(match)
             self.assertEqual(match.to_dict()["box"], {"x": 3, "y": 2, "width": 2, "height": 2})
             self.assertEqual(match.to_dict()["click"], {"x": 4, "y": 3})
+
+    def test_browser_chat_session_saves_upload_and_generates_flow(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            image = root / "button.png"
+            write_rgba_png(image, 2, 1, [(255, 0, 0, 255), (0, 0, 255, 255)])
+            data_uri = "data:image/png;base64," + base64.b64encode(image.read_bytes()).decode("ascii")
+            session = WorkflowChatSession(root / "workspace")
+            result = session.handle_chat(
+                message="คลิ๊ก button แล้วรอ 1 วินาที",
+                goal="สร้าง flow คลิ๊กปุ่ม",
+                attachments=[{"name": "button", "file_name": "button.png", "data_uri": data_uri}],
+            )
+            self.assertIn("สร้าง workflow แล้ว", result["reply"])
+            self.assertEqual(len(result["workflow"]["anchors"]), 1)
+            self.assertEqual([step["action"] for step in result["workflow"]["steps"]], ["assert_visible", "click", "wait"])
+            self.assertTrue(Path(result["workflow_path"]).exists())
+            self.assertIn("data_uri", result["workflow"]["anchors"][0]["metadata"]["ai_language"])
 
 
 if __name__ == "__main__":
