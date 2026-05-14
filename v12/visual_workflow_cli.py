@@ -11,7 +11,14 @@ from pathlib import Path
 repo = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo))
 
-from v12.visual_workflow_agent import PromptWorkflowPlanner, WorkflowSpec, build_anchor, dry_run_events
+from v12.visual_workflow_agent import (
+    PromptWorkflowPlanner,
+    WorkflowSpec,
+    build_anchor,
+    dry_run_events,
+    image_to_ai_language,
+    scan_workflow_targets,
+)
 
 
 def _read_text_argument(value: str | None, file_value: str | None) -> str:
@@ -22,7 +29,15 @@ def _read_text_argument(value: str | None, file_value: str | None) -> str:
 
 def cmd_create(args: argparse.Namespace) -> None:
     instruction = _read_text_argument(args.instruction, args.instruction_file)
-    anchors = [build_anchor(item, base_dir=Path.cwd(), description=args.anchor_description) for item in args.image]
+    anchors = [
+        build_anchor(
+            item,
+            base_dir=Path.cwd(),
+            description=args.anchor_description,
+            include_data_uri=args.embed_image_data_uri,
+        )
+        for item in args.image
+    ]
     spec = PromptWorkflowPlanner().plan(args.goal, anchors, instruction)
     spec.save(Path(args.out))
     print(json.dumps({"status": "created", "out": args.out, "anchors": len(anchors), "steps": len(spec.steps)}, indent=2))
@@ -61,6 +76,40 @@ def cmd_validate(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def cmd_describe_image(args: argparse.Namespace) -> None:
+    payload = image_to_ai_language(
+        Path(args.image),
+        name=args.name or Path(args.image).stem,
+        description=args.description or "",
+        include_data_uri=args.embed_data_uri,
+        max_data_uri_bytes=args.max_data_uri_bytes,
+    )
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+
+
+def cmd_scan(args: argparse.Namespace) -> None:
+    spec = WorkflowSpec.load(Path(args.workflow))
+    matches = [match.to_dict() for match in scan_workflow_targets(Path(args.screen), spec)]
+    result = {
+        "status": "found" if matches else "not_found",
+        "screen": args.screen,
+        "matches": matches,
+        "next_action": None,
+    }
+    if matches:
+        first = matches[0]
+        result["next_action"] = {
+            "action": "click",
+            "target": first["target"],
+            "x": first["click"]["x"],
+            "y": first["click"]["y"],
+            "review_required": True,
+        }
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if args.require_match and not matches:
+        sys.exit(1)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Visual workflow agent CLI for image-anchored desktop workflows")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -71,6 +120,7 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--instruction", help="extra workflow instructions or prompt text")
     create.add_argument("--instruction-file", help="read extra workflow instructions from a file")
     create.add_argument("--anchor-description", default="", help="description applied to supplied anchors")
+    create.add_argument("--embed-image-data-uri", action="store_true", help="embed small image data URIs in AI-readable anchor payloads")
     create.add_argument("--out", required=True, help="output workflow JSON path")
     create.set_defaults(func=cmd_create)
 
@@ -86,6 +136,20 @@ def build_parser() -> argparse.ArgumentParser:
     validate = sub.add_parser("validate", help="validate anchors and step targets")
     validate.add_argument("workflow")
     validate.set_defaults(func=cmd_validate)
+
+    describe = sub.add_parser("describe-image", help="convert an attached image into AI-readable JSON")
+    describe.add_argument("image")
+    describe.add_argument("--name")
+    describe.add_argument("--description")
+    describe.add_argument("--embed-data-uri", action="store_true")
+    describe.add_argument("--max-data-uri-bytes", type=int, default=262_144)
+    describe.set_defaults(func=cmd_describe_image)
+
+    scan = sub.add_parser("scan", help="scan a screenshot PNG for workflow image anchors and return click points")
+    scan.add_argument("workflow")
+    scan.add_argument("--screen", required=True, help="PNG screenshot/screen image to scan")
+    scan.add_argument("--require-match", action="store_true", help="exit non-zero if no anchor is found")
+    scan.set_defaults(func=cmd_scan)
     return parser
 
 

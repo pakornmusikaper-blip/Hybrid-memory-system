@@ -11,9 +11,13 @@ plugged in.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
+import mimetypes
 import re
+import struct
+import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -147,6 +151,40 @@ class WorkflowSpec:
         return cls.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
 
+@dataclass(frozen=True)
+class PixelImage:
+    """Decoded image pixels used by the scanner."""
+
+    width: int
+    height: int
+    pixels: list[tuple[int, int, int, int]]
+
+    def at(self, x: int, y: int) -> tuple[int, int, int, int]:
+        return self.pixels[y * self.width + x]
+
+
+@dataclass(frozen=True)
+class VisualMatch:
+    """A template match found on a screenshot or screen image."""
+
+    target: str
+    score: float
+    x: int
+    y: int
+    width: int
+    height: int
+    click_x: int
+    click_y: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "target": self.target,
+            "score": round(self.score, 6),
+            "box": {"x": self.x, "y": self.y, "width": self.width, "height": self.height},
+            "click": {"x": self.click_x, "y": self.click_y},
+        }
+
+
 def read_image_metadata(path: Path) -> dict[str, Any]:
     """Return stable metadata for a visual anchor without third-party libraries."""
 
@@ -192,7 +230,271 @@ def _read_jpeg_size(data: bytes) -> tuple[int, int] | None:
     return None
 
 
-def build_anchor(spec: str, base_dir: Path | None = None, description: str = "") -> VisualAnchor:
+def image_to_ai_language(
+    path: Path,
+    name: str = "image",
+    description: str = "",
+    include_data_uri: bool = False,
+    max_data_uri_bytes: int = 262_144,
+) -> dict[str, Any]:
+    """Convert an image into an AI-readable JSON description.
+
+    The payload contains stable facts, a compact visual summary, and optionally a
+    data URI that a multimodal model can ingest as an attachment.  The summary is
+    deliberately factual; semantic interpretation still belongs to the vision
+    model or operator-provided description.
+    """
+
+    data = path.read_bytes()
+    metadata = read_image_metadata(path)
+    language: dict[str, Any] = {
+        "kind": "visual_anchor_image",
+        "name": name,
+        "description": description,
+        "file_name": path.name,
+        "mime_type": mimetypes.guess_type(str(path))[0] or f"image/{metadata.get('format', 'unknown')}",
+        "sha256": metadata["sha256"],
+        "bytes": metadata["bytes"],
+        "format": metadata.get("format", "unknown"),
+        "dimensions": {
+            "width": metadata.get("width"),
+            "height": metadata.get("height"),
+        },
+    }
+    if metadata.get("format") == "png":
+        pixels = decode_png_pixels(path)
+        language["dominant_colors"] = dominant_colors(pixels, limit=5)
+        language["ascii_preview"] = ascii_preview(pixels)
+    else:
+        language["note"] = "pixel preview currently supports PNG; attach this file as image input for full vision understanding"
+    if include_data_uri and len(data) <= max_data_uri_bytes:
+        language["data_uri"] = f"data:{language['mime_type']};base64,{base64.b64encode(data).decode('ascii')}"
+    elif include_data_uri:
+        language["data_uri_omitted"] = f"image has {len(data)} bytes, above max_data_uri_bytes={max_data_uri_bytes}"
+    return language
+
+
+def decode_png_pixels(path: Path) -> PixelImage:
+    """Decode common non-interlaced 8-bit PNGs into RGBA pixels."""
+
+    data = path.read_bytes()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError(f"not a PNG image: {path}")
+    index = 8
+    width = height = bit_depth = color_type = interlace = None
+    compressed = bytearray()
+    while index + 8 <= len(data):
+        length = struct.unpack(">I", data[index:index + 4])[0]
+        chunk_type = data[index + 4:index + 8]
+        chunk = data[index + 8:index + 8 + length]
+        index += 12 + length
+        if chunk_type == b"IHDR":
+            width, height, bit_depth, color_type, _, _, interlace = struct.unpack(">IIBBBBB", chunk)
+        elif chunk_type == b"IDAT":
+            compressed.extend(chunk)
+        elif chunk_type == b"IEND":
+            break
+    if None in {width, height, bit_depth, color_type, interlace}:
+        raise ValueError(f"invalid PNG header: {path}")
+    if bit_depth != 8 or interlace != 0 or color_type not in {0, 2, 4, 6}:
+        raise ValueError("scanner supports non-interlaced 8-bit PNG color types 0, 2, 4, and 6")
+    channels = {0: 1, 2: 3, 4: 2, 6: 4}[color_type]
+    stride = width * channels
+    raw = zlib.decompress(bytes(compressed))
+    rows: list[bytes] = []
+    cursor = 0
+    previous = bytes(stride)
+    for _ in range(height):
+        filter_type = raw[cursor]
+        cursor += 1
+        scanline = bytearray(raw[cursor:cursor + stride])
+        cursor += stride
+        recon = _unfilter_png_scanline(filter_type, scanline, previous, channels)
+        rows.append(bytes(recon))
+        previous = bytes(recon)
+    pixels: list[tuple[int, int, int, int]] = []
+    for row in rows:
+        for x in range(0, len(row), channels):
+            if color_type == 0:
+                gray = row[x]
+                pixels.append((gray, gray, gray, 255))
+            elif color_type == 2:
+                pixels.append((row[x], row[x + 1], row[x + 2], 255))
+            elif color_type == 4:
+                gray = row[x]
+                pixels.append((gray, gray, gray, row[x + 1]))
+            else:
+                pixels.append((row[x], row[x + 1], row[x + 2], row[x + 3]))
+    return PixelImage(width=width, height=height, pixels=pixels)
+
+
+def _unfilter_png_scanline(filter_type: int, scanline: bytearray, previous: bytes, bpp: int) -> bytearray:
+    out = bytearray(len(scanline))
+    for i, value in enumerate(scanline):
+        left = out[i - bpp] if i >= bpp else 0
+        up = previous[i] if previous else 0
+        upper_left = previous[i - bpp] if previous and i >= bpp else 0
+        if filter_type == 0:
+            predictor = 0
+        elif filter_type == 1:
+            predictor = left
+        elif filter_type == 2:
+            predictor = up
+        elif filter_type == 3:
+            predictor = (left + up) // 2
+        elif filter_type == 4:
+            predictor = _paeth(left, up, upper_left)
+        else:
+            raise ValueError(f"unsupported PNG filter type: {filter_type}")
+        out[i] = (value + predictor) & 0xFF
+    return out
+
+
+def _paeth(left: int, up: int, upper_left: int) -> int:
+    estimate = left + up - upper_left
+    distances = (abs(estimate - left), abs(estimate - up), abs(estimate - upper_left))
+    if distances[0] <= distances[1] and distances[0] <= distances[2]:
+        return left
+    if distances[1] <= distances[2]:
+        return up
+    return upper_left
+
+
+def dominant_colors(image: PixelImage, limit: int = 5) -> list[dict[str, Any]]:
+    buckets: dict[tuple[int, int, int], int] = {}
+    for red, green, blue, alpha in image.pixels:
+        if alpha == 0:
+            continue
+        key = (red // 32 * 32, green // 32 * 32, blue // 32 * 32)
+        buckets[key] = buckets.get(key, 0) + 1
+    total = sum(buckets.values()) or 1
+    ranked = sorted(buckets.items(), key=lambda item: item[1], reverse=True)[:limit]
+    return [
+        {"rgb_bucket": list(color), "coverage": round(count / total, 4)}
+        for color, count in ranked
+    ]
+
+
+def ascii_preview(image: PixelImage, max_width: int = 24, max_height: int = 12) -> list[str]:
+    if image.width == 0 or image.height == 0:
+        return []
+    shades = " .:-=+*#%@"
+    x_step = max(1, image.width // max_width)
+    y_step = max(1, image.height // max_height)
+    lines: list[str] = []
+    for y in range(0, image.height, y_step):
+        chars: list[str] = []
+        for x in range(0, image.width, x_step):
+            red, green, blue, alpha = image.at(x, y)
+            if alpha == 0:
+                chars.append(" ")
+                continue
+            luminance = int(0.2126 * red + 0.7152 * green + 0.0722 * blue)
+            chars.append(shades[min(len(shades) - 1, luminance * len(shades) // 256)])
+        lines.append("".join(chars[:max_width]))
+        if len(lines) >= max_height:
+            break
+    return lines
+
+
+def find_template_in_image(
+    screen_path: Path,
+    template_path: Path,
+    target: str = "target",
+    threshold: float = 0.96,
+    click_policy: str = "center",
+    offset_x: int = 0,
+    offset_y: int = 0,
+) -> VisualMatch | None:
+    """Scan a screenshot/image for a PNG template and return a click point."""
+
+    screen = decode_png_pixels(screen_path)
+    template = decode_png_pixels(template_path)
+    if template.width > screen.width or template.height > screen.height:
+        return None
+    best_score = -1.0
+    best_xy = (0, 0)
+    for y in range(screen.height - template.height + 1):
+        for x in range(screen.width - template.width + 1):
+            score = _template_score(screen, template, x, y)
+            if score > best_score:
+                best_score = score
+                best_xy = (x, y)
+            if score >= 1.0:
+                return _build_visual_match(target, template, best_xy[0], best_xy[1], score, click_policy, offset_x, offset_y)
+    if best_score < threshold:
+        return None
+    return _build_visual_match(target, template, best_xy[0], best_xy[1], best_score, click_policy, offset_x, offset_y)
+
+
+def scan_workflow_targets(screen_path: Path, spec: WorkflowSpec) -> list[VisualMatch]:
+    """Find all workflow anchors on a screenshot."""
+
+    matches: list[VisualMatch] = []
+    for anchor in spec.anchors:
+        match = find_template_in_image(
+            screen_path=screen_path,
+            template_path=Path(anchor.image_path),
+            target=anchor.name,
+            threshold=anchor.confidence_threshold,
+            click_policy=anchor.click_policy,
+            offset_x=anchor.offset_x,
+            offset_y=anchor.offset_y,
+        )
+        if match:
+            matches.append(match)
+    return matches
+
+
+def _template_score(screen: PixelImage, template: PixelImage, origin_x: int, origin_y: int) -> float:
+    diff = 0
+    compared = 0
+    for ty in range(template.height):
+        for tx in range(template.width):
+            tr, tg, tb, ta = template.at(tx, ty)
+            if ta == 0:
+                continue
+            sr, sg, sb, _ = screen.at(origin_x + tx, origin_y + ty)
+            diff += abs(sr - tr) + abs(sg - tg) + abs(sb - tb)
+            compared += 3
+    if compared == 0:
+        return 0.0
+    return max(0.0, 1.0 - (diff / (compared * 255)))
+
+
+def _build_visual_match(
+    target: str,
+    template: PixelImage,
+    x: int,
+    y: int,
+    score: float,
+    click_policy: str,
+    offset_x: int,
+    offset_y: int,
+) -> VisualMatch:
+    if click_policy == "top_left":
+        click_x, click_y = x, y
+    else:
+        click_x, click_y = x + template.width // 2, y + template.height // 2
+    return VisualMatch(
+        target=target,
+        score=score,
+        x=x,
+        y=y,
+        width=template.width,
+        height=template.height,
+        click_x=click_x + offset_x,
+        click_y=click_y + offset_y,
+    )
+
+
+def build_anchor(
+    spec: str,
+    base_dir: Path | None = None,
+    description: str = "",
+    include_image_language: bool = True,
+    include_data_uri: bool = False,
+) -> VisualAnchor:
     """Build an anchor from NAME=PATH or PATH syntax."""
 
     if "=" in spec:
@@ -207,11 +509,20 @@ def build_anchor(spec: str, base_dir: Path | None = None, description: str = "")
         raise FileNotFoundError(f"visual anchor image not found: {image_path}")
     if not name.strip():
         raise ValueError("visual anchor name cannot be empty")
+    safe_name = _safe_name(name)
+    metadata = read_image_metadata(image_path)
+    if include_image_language:
+        metadata["ai_language"] = image_to_ai_language(
+            image_path,
+            name=safe_name,
+            description=description,
+            include_data_uri=include_data_uri,
+        )
     return VisualAnchor(
-        name=_safe_name(name),
+        name=safe_name,
         image_path=str(image_path),
         description=description,
-        metadata=read_image_metadata(image_path),
+        metadata=metadata,
     )
 
 
@@ -293,10 +604,14 @@ def render_agent_prompt(goal: str, anchors: list[VisualAnchor], steps: list[Work
         size = ""
         if "width" in anchor.metadata and "height" in anchor.metadata:
             size = f" ({anchor.metadata['width']}x{anchor.metadata['height']} {anchor.metadata.get('format', 'image')})"
+        ai_language = anchor.metadata.get("ai_language", {})
+        preview = ai_language.get("ascii_preview", [])
+        preview_text = " | preview=" + "/".join(preview[:3]) if preview else ""
         anchor_lines.append(
             f"- {anchor.name}: match attached image `{anchor.image_path}`{size}; "
             f"click={anchor.click_policy}; confidence>={anchor.confidence_threshold}; "
-            f"description={anchor.description or 'operator-provided visual target'}"
+            f"description={anchor.description or 'operator-provided visual target'}; "
+            f"sha256={anchor.metadata.get('sha256', 'unknown')}{preview_text}"
         )
     step_lines = [f"{idx}. {step.to_dict()}" for idx, step in enumerate(steps, start=1)]
     return "\n".join([
